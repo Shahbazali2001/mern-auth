@@ -1,0 +1,12 @@
+Packages used in this project:
+1. express (for creating server)
+2. cors (for cross origin resource sharing)
+3. dotenv (for environment variables)
+4. nodemon (for auto restarting server)
+5. jsonwebtoken (for authentication)
+6. mongoose (for database)
+7. bcrypt (for hashing password)
+8. nodemailer (for sending email)
+9. cookieparser (for cookies)
+
+
