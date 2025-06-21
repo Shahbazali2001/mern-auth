@@ -1,7 +1,8 @@
-import bycrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import userModel from "../models/userModel.js";
+import tranporter from "../config/nodeMailer.js";
 
 
 dotenv.config();
@@ -22,7 +23,7 @@ export const register = async (req, res) => {
     }
 
     // Hash the password
-    const hashedPassword = await bycrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new user
     const newUser = new userModel({
@@ -30,8 +31,9 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
     });
+
     await newUser.save();
-    // return res.status(201).json({ message: "User registered successfully", success: true });
+    
 
     // Token creation
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: "1h"});
@@ -42,12 +44,30 @@ export const register = async (req, res) => {
       maxAge: 3600000 
     });
 
-    res.status(201).json({ message: "User registered successfully", success: true, token });
+    //Sending welcome email
+    try {
+      const mailOptions ={
+        from: process.env.SENDER_EMAIL,
+        to: email,
+        subject: "Welcome to our website",
+        text: `Hello ${name}, Welcome to our website. We are glad to have you here.`,
+      };
+
+      await tranporter.sendMail(mailOptions);
+      console.log("Welcome email sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't return error here - user registration was successful
+    }
+
+    // Send the token in the response
+    return res.status(201).json({ message: "User registered successfully", success: true, token });
 
 
 
   } catch (error) {
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Internal Server Error", success: false });
   }
 };
 
@@ -66,7 +86,7 @@ export const login = async (req, res) => {
           return res.status(401).json({ message: "Invalid email", success: false });
         }
 
-        const isMatch = await bycrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
           return res.status(401).json({ message: "Invalid password", success: false });
         }
@@ -83,9 +103,8 @@ export const login = async (req, res) => {
         res.status(200).json({ message: "Login successful", success: true });
 
   }catch(error){
-
+    console.error("Login error:", error);
     res.status(500).json({ message: "Internal Server Error" });
-  
   }
 }
 
