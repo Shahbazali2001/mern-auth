@@ -88,3 +88,18 @@ export const login = async (req, res) => {
   
   }
 }
+
+
+// Logout a user
+export const logout = (req, res) => {
+  try{
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
+    res.status(200).json({ message: "Logout successful", success: true });
+  }catch(error){
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
