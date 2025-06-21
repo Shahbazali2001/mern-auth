@@ -27,10 +27,7 @@ const connectDB = async () => {
             console.log("MongoDB disconnected");
         });
         
-        await mongoose.connect(process.env.MONGO_URL, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
+        await mongoose.connect(process.env.MONGO_URL);
         
     } catch (error) {
         console.log("Error connecting to MongoDB:", error.message);
