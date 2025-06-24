@@ -193,3 +193,62 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({success: false, message: "Internal Server Error" });
   }
 }
+
+// Check authentication
+export const isAuthenticated = async (req, res) => {
+  try{
+    const {userId} = req.body; // user id will be get from token
+    const user = await userModel.findById(userId);
+    if(!user){
+      return res.status(404).json({success: false, message: "User not found"});
+    }
+    if(!user.isAccountVerified){
+      return res.status(401).json({success: false, message: "User not verified"});
+    }
+    res.status(200).json({message: "User authenticated successfully", success: true});
+    
+  }catch(error){
+    res.status(500).json({success: false, message: "Internal Server Error" });
+  }
+}
+
+//Send OTP for Password Reset
+export const sendResetOtp = async (req, res) => {
+  try{
+      const {email} = req.body; // email will be get from user input
+      if(!email){
+        return res.status(400).json({success: false, message: "Email is required"});
+      }
+
+      const user = await userModel.findOne({email});
+      if(!user){
+        return res.status(404).json({success: false, message: "User not found"});
+      }
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      user.resetOTP = otp;
+      user.resetOTPExpireAt = Date.now() + 3600000; // 1 hour
+      await user.save();
+      console.log("OTP sent successfully");
+      res.status(200).json({success: true, message: "OTP sent successfully"});
+
+      // Send OTP via email
+      const  resetOtpMailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: "Password Reset OTP",
+        text: `Your OTP is: ${otp}`,
+      };
+      await tranporter.sendMail(resetOtpMailOptions);
+      console.log("OTP sent via email successfully");
+      res.status(200).json({success: true, message: "OTP sent via email successfully"});
+      
+  } catch(error){
+    res.status(500).json({success: false, message: "Internal Server Error" });
+  }
+}  
+
+// Verify OTP and Reset Password
+export const resetPassword = async (req, res)=>{
+  
+}
