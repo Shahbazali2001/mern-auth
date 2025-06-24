@@ -127,7 +127,7 @@ export const logout = (req, res) => {
 // Email verification
 export const sendVerifyOtp = async (req, res) => {
   try{
-      const {userId} =req.body;
+      const {userId} =req.body; // user id will be get from token
       const user = await userModel.findById(userId);
       if(!user){
         return res.status(404).json({success: false, message: "User not found"});
@@ -167,7 +167,7 @@ export const sendVerifyOtp = async (req, res) => {
 // Verify OTP
 export const verifyEmail = async (req, res) => {
   try{
-       const {userId, otp} = req.body;
+       const {userId, otp} = req.body; // user id will be get from token and otp will be get from user input
        const user = await userModel.findById(userId);
 
        if(!user || !otp){
