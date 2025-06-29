@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const tranporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
+    service: "gmail",
+    // port: 587,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
