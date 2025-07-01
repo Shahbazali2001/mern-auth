@@ -1,28 +1,49 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  const { backendUrl, setIsLoggedIn } = useContext(AppContext);
+  const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
 
-
-  const [state, setState] = useState("signup"); 
-  const [fullName, setFullName] = useState("");
+  const [state, setState] = useState("Sign Up"); // Default state is "Signup");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
+
   const onSubmitHandler = async (e) => {
-    try{
-          e.preventDefault();
+    e.preventDefault();
+    axios.defaults.withCredentials = true;
 
+    try {
+      const url =
+        state === "Sign Up"
+          ? `${backendUrl}/api/auth/register`
+          : `${backendUrl}/api/auth/login`;
 
-    }catch(err){
-      console.log(err)
+      const payload =
+        state === "Sign Up" ? { name, email, password } : { email, password };
+
+      const { data } = await axios.post(url, payload);
+
+      if (data.success) {
+        toast.success(data.message || "Authenticated successfully");
+        setIsLoggedIn(true);
+        await getUserData();
+        navigate("/");
+      } else {
+        toast.error(data.message || "Something went wrong");
+      }
+    } catch (error) {
+      const errMsg =
+        error.response?.data?.message || "Internal Server Error. Try again.";
+      toast.error(errMsg);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
@@ -47,8 +68,8 @@ const Login = () => {
             <div className="mb-4 flex items-center gap-3 w-full px-5 py-2.5 rounded-full bg-[#333A5C]">
               <img src={assets.person_icon} alt="" />
               <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 type="text"
                 placeholder="Full Name"
                 required
@@ -81,11 +102,17 @@ const Login = () => {
             />
           </div>
 
-          <p onClick={() => navigate("/reset-password")} className="text-right mb-2 text-sm text-gray-400 hover:underline cursor-pointer">
+          <p
+            onClick={() => navigate("/reset-password")}
+            className="text-right mb-2 text-sm text-gray-400 hover:underline cursor-pointer"
+          >
             Forgot Password?
           </p>
 
-          <button className="bg-gradient-to-br from-blue-500 to-indigo-900 text-white font-medium py-2 px-4 rounded-full w-full">
+          <button
+            type="submit"
+            className="bg-gradient-to-br from-blue-500 to-indigo-900 text-white font-medium py-2 px-4 rounded-full w-full cursor-pointer"
+          >
             {state}
           </button>
         </form>
