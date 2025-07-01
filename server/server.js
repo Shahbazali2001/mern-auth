@@ -13,9 +13,22 @@ const port = process.env.PORT || 4000;
 
 connectDB();
 
+const allowedOrigins = ["http://localhost:5173"];
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow undefined origin for tools like Postman or mobile apps (optional)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+
 // Middlewares 
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(cors());
 app.use(cookieParser({credentials : true}));
 
 

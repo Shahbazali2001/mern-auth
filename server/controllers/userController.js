@@ -1,22 +1,34 @@
 import userModel from "../models/userModel.js";
 
-export const getUserData = async (req, res)=>{
-    try{
-         const {userId} = req.body; // user id will be get from token
-         const user = await userModel.findById(userId);
-        if(!user){
-            return res.status(404).json({message: "User not found", success: false});
-        }
-        res.status(200).json({
-            success: true,
-            userData : {
-                name: user.name,
-                email: user.email,
-                isAccountVerified: user.isAccountVerified,
-            }
+export const getUserData = async (req, res) => {
+  try {
+    const userId = req.userId; 
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          errorType: "user_not_found",
+          message: "User not found",
         });
-
-    }catch(error){
-        res.status(500).json({message: "Internal Server Error"});
     }
-}
+    res.status(200).json({
+      success: true,
+      statusType: "user_fetch_success",
+      userData: {
+        name: user.name,
+        email: user.email,
+        isAccountVerified: user.isAccountVerified,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        success: false,
+        errorType: "server_error",
+        message: "Internal Server Error",
+      });
+  }
+};
