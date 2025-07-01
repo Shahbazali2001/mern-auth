@@ -1,10 +1,13 @@
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { Home, Login, EmailVerify, ResetPassword } from './pages'
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <div>
+      <ToastContainer />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/login' element={<Login />} />
