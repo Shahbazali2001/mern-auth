@@ -105,27 +105,33 @@ export const login = async (req, res) => {
     }
 
     // Token creation
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
     });
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 3600000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Ensure cookie is available on all paths
     });
 
     res.status(200).json({
       success: true,
       statusType: "login_success",
       message: "Login successful",
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({
       success: false,
       errorType: "server_error",
-      message: "Something went wrong. Please try again later.",
+      message: "Internal Server Error",
     });
   }
 };
@@ -156,7 +162,7 @@ export const logout = (req, res) => {
 // Email verification
 export const sendVerifyOtp = async (req, res) => {
   try {
-    const { userId } = req.body; // user id will be get from token
+    const userId = req.user._id; // user id will be get from token
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -213,7 +219,8 @@ export const sendVerifyOtp = async (req, res) => {
 // Verify OTP
 export const verifyEmail = async (req, res) => {
   try {
-    const { userId, otp } = req.body; // user id will be get from token and otp will be get from user input
+    const { otp } = req.body; // user id will be get from token and otp will be get from user input
+    const userId = req.user._id;
     const user = await userModel.findById(userId);
 
     if (!user || !otp) {
@@ -264,7 +271,7 @@ export const verifyEmail = async (req, res) => {
 // Check authentication
 export const isAuthenticated = async (req, res) => {
   try {
-    const { userId } = req.body; // user id will be get from token
+    const userId = req.user._id; // user id will be get from token
     const user = await userModel.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -323,14 +330,7 @@ export const sendResetOtp = async (req, res) => {
     user.resetOTP = otp;
     user.resetOTPExpireAt = Date.now() + 3600000; // 1 hour
     await user.save();
-    console.log("OTP sent successfully");
-    res
-      .status(200)
-      .json({
-        success: true,
-        statusType: "otp_sent",
-        message: "OTP sent successfully",
-      });
+    
 
     // Send OTP via email
     const resetOtpMailOptions = {
@@ -341,6 +341,7 @@ export const sendResetOtp = async (req, res) => {
     };
     await tranporter.sendMail(resetOtpMailOptions);
     console.log("OTP sent via email successfully");
+    retrun 
     res
       .status(200)
       .json({
@@ -349,6 +350,7 @@ export const sendResetOtp = async (req, res) => {
         message: "OTP sent via email successfully",
       });
   } catch (error) {
+    
     res
       .status(500)
       .json({
@@ -421,5 +423,26 @@ export const resetPassword = async (req, res) => {
         errorType: "server_error",
         message: "Internal Server Error",
       });
+  }
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    // User is already attached to req by middleware
+    res.status(200).json({
+      success: true,
+      user: {
+        id: req.user._id,
+        email: req.user.email,
+        name: req.user.name,
+      },
+    });
+  } catch (error) {
+    console.error("Get current user error:", error);
+    res.status(500).json({
+      success: false,
+      errorType: "server_error",
+      message: "Internal Server Error",
+    });
   }
 };

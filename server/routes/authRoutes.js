@@ -1,17 +1,19 @@
 import express from "express";
-import { register, login, logout, sendVerifyOtp, verifyEmail, isAuthenticated, sendResetOtp, resetPassword } from "../controllers/authController.js";
-import userAuth from "../middlewares/userAuth.js";
+import { login, logout, register, sendVerifyOtp, verifyEmail, isAuthenticated, sendResetOtp, resetPassword, getCurrentUser } from "../controllers/authController.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
 
-const authRouter = express.Router();
+const router = express.Router();
 
-authRouter.post("/register", register);
-authRouter.post("/login", login);
-authRouter.post("/logout", logout);
-authRouter.post("/send-verify-otp", userAuth, sendVerifyOtp);
-authRouter.post("/verify-account", userAuth, verifyEmail);
-authRouter.post("/is-authenticated", userAuth, isAuthenticated);
-authRouter.post("/send-reset-otp", sendResetOtp);
-authRouter.post("/reset-password", resetPassword);
+router.post("/register", register);
+router.post("/login", login);
+router.post("/logout", logout);
+router.post("/reset-password", resetPassword); // Rest Password
+router.post("/send-reset-otp", sendResetOtp);  // Send Reset Password OTP
+router.post("/send-verify-otp", authenticateToken, sendVerifyOtp);  // Send Email Verification OTP
+router.post("/verify-email", authenticateToken, verifyEmail);  // Verify Email Using OTP
+router.get("/is-verified", authenticateToken, isAuthenticated);
 
-export default authRouter;
+router.get("/me", authenticateToken, getCurrentUser); // Protected route
 
+
+export default router;
